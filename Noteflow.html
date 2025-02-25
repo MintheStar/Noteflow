@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noteflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f6f3;
+            --border-color: #ebeaea;
+            --text-primary: #37352f;
+            --text-secondary: rgba(55, 53, 47, 0.65);
+            --hover-bg: rgba(55, 53, 47, 0.08);
+            --focus-bg: rgba(35, 131, 226, 0.08);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #2d2d2d;
+            --border-color: #3d3d3d;
+            --text-primary: #e0e0e0;
+            --text-secondary: rgba(224, 224, 224, 0.65);
+            --hover-bg: rgba(224, 224, 224, 0.08);
+            --focus-bg: rgba(35, 131, 226, 0.15);
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            height: 100%;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            background-color: #0d6efd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .sidebar-item {
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 3px;
+            margin: 2px 4px;
+            transition: background-color 0.1s ease;
+            color: var(--text-primary);
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .sidebar-item.active {
+            background-color: var(--hover-bg);
+        }
+
+        .sidebar-item-icon {
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-section-header {
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-primary);
+        }
+
+        .topbar {
+            height: 45px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .breadcrumb {
+            margin-bottom: 0;
+        }
+
+        .breadcrumb-item, .breadcrumb-item a {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .editor {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 96px;
+        }
+
+        .page-title {
+            margin-top: 80px;
+            margin-bottom: 20px;
+            font-size: 40px;
+            font-weight: 700;
+            outline: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            color: var(--text-primary);
+        }
+
+        .content-block {
+            position: relative;
+            margin-bottom: 4px;
+            min-height: 22px;
+            font-size: 16px;
+            line-height: 1.5;
+            outline: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            padding: 3px 2px;
+            color: var(--text-primary);
+        }
+
+        .content-block:focus {
+            background-color: var(--focus-bg);
+        }
+
+        .content-block:hover::before {
+            content: "+";
+            position: absolute;
+            left: -24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.1s ease-in;
+        }
+
+        .content-block:hover::before {
+            opacity: 1;
+        }
+
+        .user-account-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .theme-toggle {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        
+        .theme-toggle .bi-moon-fill {
+            display: none;
+        }
+
+        [data-theme="dark"] .theme-toggle .bi-sun-fill {
+            display: none;
+        }
+
+        [data-theme="dark"] .theme-toggle .bi-moon-fill {
+            display: inline-block;
+            color: #f9d71c;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .modal-header, .modal-footer {
+            padding: 0.75rem 1.25rem;
+            border-color: var(--border-color);
+        }
+
+        .modal-body {
+            padding: 1rem 1.25rem;
+        }
+        
+        .form-control {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        
+        .form-control:focus {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .form-label {
+            color: var(--text-primary);
+        }
+        
+        .btn-light {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .btn-light:hover {
+            background-color: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        a {
+            color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar me-2">U</div>
+                    <div class="fw-medium">User's Workspace</div>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-search"></i></div>
+                    <div>Search</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-bell"></i></div>
+                    <div>All Updates</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-clock-history"></i></div>
+                    <div>Recent</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-star"></i></div>
+                    <div>Favorites</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section-header">Workspace</div>
+            <div>
+                <div class="sidebar-item active">
+                    <div class="sidebar-item-icon"><i class="bi bi-file-text"></i></div>
+                    <div>Getting Started</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-journal-text"></i></div>
+                    <div>Project Notes</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-bar-chart"></i></div>
+                    <div>Q1 Goals</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-check2-square"></i></div>
+                    <div>Task List</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-people"></i></div>
+                    <div>Meeting Notes</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section-header">Shared</div>
+            <div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-person-plus"></i></div>
+                    <div>Team Wiki</div>
+                </div>
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-book"></i></div>
+                    <div>Resources</div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <div class="sidebar-item">
+                    <div class="sidebar-item-icon"><i class="bi bi-plus-lg"></i></div>
+                    <div>New Page</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="topbar">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#" style="text-decoration: none;">Workspace</a></li>
+                        <li class="breadcrumb-item active">Getting Started</li>
+                    </ol>
+                </nav>
+                
+                <div class="ms-auto d-flex align-items-center">
+                    <div class="theme-toggle" onclick="toggleTheme()">
+                        <i class="bi bi-sun-fill fs-5" title="Switch to Dark Mode"></i>
+                        <i class="bi bi-moon-fill fs-5" title="Switch to Light Mode"></i>
+                    </div>
+                    
+                    <button class="btn btn-sm btn-light rounded-circle me-1" title="Comments">
+                        <i class="bi bi-chat"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light rounded-circle me-3" title="More options">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    
+                    <div class="auth-buttons">
+                        <button class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</button>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">Sign up</button>
+                    </div>
+                    
+                    <div class="user-account d-none">
+                        <div class="d-flex align-items-center">
+                            <div class="user-account-avatar me-2" id="userAvatar">J</div>
+                            <div class="fw-medium" id="userName">Hello, JohnDoe!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor">
+                <input class="page-title" value="Getting Started">
+                <textarea class="content-block">Welcome to your Noteflow workspace! Use this document to organize your thoughts, projects, and tasks.</textarea>
+                <textarea class="content-block">Click anywhere to start writing.</textarea>
+                <textarea class="content-block">You can create:</textarea>
+                <textarea class="content-block">• To-do lists</textarea>
+                <textarea class="content-block">• Headings</textarea>
+                <textarea class="content-block">• Tables</textarea>
+                <textarea class="content-block">• And much more...</textarea>
+                <textarea class="content-block"></textarea>
+                <textarea class="content-block">Type "/" to see all the commands available.</textarea>
+                <textarea class="content-block" placeholder="Type '/' for commands..."></textarea>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Log in to Noteflow</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" placeholder="Enter your email" required>
+                            <div class="invalid-feedback" id="loginEmailError">Please enter a valid email address</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" required>
+                            <div class="invalid-feedback" id="loginPasswordError">Password is required</div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" onclick="login()">Log in</button>
+                        <div class="text-center mt-3">
+                            <span>Don't have an account? </span>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#signupModal" data-bs-dismiss="modal">Sign up</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signupModalLabel">Sign up for Noteflow</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="signupForm">
+                        <div class="mb-3">
+                            <label for="signupName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="signupName" placeholder="Enter your name" required>
+                            <div class="invalid-feedback" id="signupNameError">Name is required</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signupEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="signupEmail" placeholder="Enter your email" required>
+                            <div class="invalid-feedback" id="signupEmailError">Please enter a valid email address</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signupPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="signupPassword" placeholder="Create a password" required>
+                            <div class="invalid-feedback" id="signupPasswordError">Password must be at least 6 characters</div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" onclick="signup()">Sign up</button>
+                        <div class="text-center mt-3">
+                            <span>Already have an account? </span>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">Log in</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Check for saved theme preference or respect OS preference
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        }
+        
+        // Load theme when page loads
+        loadTheme();
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email.toLowerCase());
+        }
+        
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+        
+        function getUserInitial(email) {
+            if (email && email.length > 0) {
+                return email.charAt(0).toUpperCase();
+            }
+            return "U";
+        }
+        
+        function login() {
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('loginPassword');
+            
+            emailInput.classList.remove('is-invalid');
+            passwordInput.classList.remove('is-invalid');
+            
+            let isValid = true;
+            
+            if (!emailInput.value || !validateEmail(emailInput.value)) {
+                emailInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (!passwordInput.value) {
+                passwordInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            const userEmail = emailInput.value;
+            
+            const username = userEmail.split('@')[0];
+            
+            document.getElementById('userName').textContent = `Hello! ${userEmail}`;
+            document.getElementById('userAvatar').textContent = getUserInitial(username);
+            
+            document.querySelector('.auth-buttons').classList.add('d-none');
+            document.querySelector('.user-account').classList.remove('d-none');
+            
+            const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+            loginModal.hide();
+        }
+        
+        function signup() {
+            const nameInput = document.getElementById('signupName');
+            const emailInput = document.getElementById('signupEmail');
+            const passwordInput = document.getElementById('signupPassword');
+            
+            nameInput.classList.remove('is-invalid');
+            emailInput.classList.remove('is-invalid');
+            passwordInput.classList.remove('is-invalid');
+            
+            let isValid = true;
+            
+            if (!nameInput.value) {
+                nameInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (!emailInput.value || !validateEmail(emailInput.value)) {
+                emailInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (!passwordInput.value || !validatePassword(passwordInput.value)) {
+                passwordInput.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            const userEmail = emailInput.value;
+            
+            const username = userEmail.split('@')[0];
+            
+            document.getElementById('userName').textContent = `Hello! ${userEmail}`;
+            document.getElementById('userAvatar').textContent = getUserInitial(username);
+            
+            document.querySelector('.auth-buttons').classList.add('d-none');
+            document.querySelector('.user-account').classList.remove('d-none');
+            
+            const signupModal = bootstrap.Modal.getInstance(document.getElementById('signupModal'));
+            signupModal.hide();
+        }
+        
+        document.querySelectorAll('.content-block').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html>
